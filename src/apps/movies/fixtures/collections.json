@@ -1,0 +1,86 @@
+[
+  {
+    "model": "movies.collection",
+    "fields": {
+      "name": "Grandes Clásicos",
+      "slug": "grandes-clasicos",
+      "emoji": "🎞️",
+      "description": "Las películas que definieron el cine.",
+      "is_active": true,
+      "created_at": "2026-06-22T00:00:00Z",
+      "updated_at": "2026-06-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "movies.collection",
+    "fields": {
+      "name": "Películas de Héroes",
+      "slug": "peliculas-de-heroes",
+      "emoji": "🦸",
+      "description": "Superhéroes y grandes gestas.",
+      "is_active": true,
+      "created_at": "2026-06-22T00:00:00Z",
+      "updated_at": "2026-06-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "movies.collection",
+    "fields": {
+      "name": "Ciencia Ficción",
+      "slug": "ciencia-ficcion",
+      "emoji": "🚀",
+      "description": "Futuros, galaxias y lo imposible.",
+      "is_active": true,
+      "created_at": "2026-06-22T00:00:00Z",
+      "updated_at": "2026-06-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "movies.collection",
+    "fields": {
+      "name": "Noche de Terror",
+      "slug": "noche-de-terror",
+      "emoji": "👻",
+      "description": "Sustos para los más valientes.",
+      "is_active": true,
+      "created_at": "2026-06-22T00:00:00Z",
+      "updated_at": "2026-06-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "movies.collection",
+    "fields": {
+      "name": "Familiar",
+      "slug": "familiar",
+      "emoji": "👨‍👩‍👧‍👦",
+      "description": "Para toda la familia.",
+      "is_active": true,
+      "created_at": "2026-06-22T00:00:00Z",
+      "updated_at": "2026-06-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "movies.collection",
+    "fields": {
+      "name": "Navidad",
+      "slug": "navidad",
+      "emoji": "🎄",
+      "description": "Clásicos navideños.",
+      "is_active": true,
+      "created_at": "2026-06-22T00:00:00Z",
+      "updated_at": "2026-06-22T00:00:00Z"
+    }
+  },
+  {
+    "model": "movies.collection",
+    "fields": {
+      "name": "Ganadoras del Oscar",
+      "slug": "ganadoras-del-oscar",
+      "emoji": "🏆",
+      "description": "Premiadas con la estatuilla dorada.",
+      "is_active": true,
+      "created_at": "2026-06-22T00:00:00Z",
+      "updated_at": "2026-06-22T00:00:00Z"
+    }
+  }
+]
