@@ -1,5 +1,33 @@
 # Changelog — Dionisio Backend
 
+## [0.4.0] — 2026-06-23 — Sincronización manual e incremental del catálogo (HU-06)
+
+### Added
+
+- **core/settings.py — OMDB_MIN_YEAR**: Nuevo setting `env.int("OMDB_MIN_YEAR", default=1990)` para descartar películas estrenadas antes del año configurado.
+- **.env / .env.example — OMDB_MIN_YEAR**: Variable `OMDB_MIN_YEAR=1990` documentada y añadida al entorno.
+- **apps/movies/services.py — Conteo de omitidas**: `SyncResult` ahora incluye `skipped`, contabilizando las películas saltadas por estar ya en el catálogo o por año insuficiente.
+- **management/commands/sync_movies.py — Flag --min-year**: Permite sobreescribir `OMDB_MIN_YEAR` en una corrida puntual.
+- **apps/movies/tests/test_movies.py — Tests de sync incremental**: Casos para salto de existentes sin pedir detalle, descarte por año mínimo y override de `min_year` (cliente OMDb falso).
+
+### Changed
+
+- **apps/movies/services.py — sync_movies incremental**: Antes de consultar el detalle se omiten las películas ya catalogadas (`Movie.objects.filter(imdb_id=...).exists()`) y las anteriores a `year_floor` (pre-filtro por el `Year` de la búsqueda + confirmación con el detalle), evitando descargas y llamadas a OMDb repetidas. Nuevo parámetro `min_year`.
+- **apps/movies/views.py — POST /api/movies/sync/**: Acepta `min_year` opcional en el body y devuelve `skipped` en la respuesta.
+- **management/commands/sync_movies.py — Resumen con omitidas**: La salida del comando reporta también las películas omitidas.
+
+### Removed
+
+- **Celery — Eliminado del proyecto**: La sincronización es ahora exclusivamente manual (comando o endpoint), por lo que se retira Celery por completo:
+  - **pyproject.toml**: Quitadas las dependencias `celery`, `django-celery-beat` y `redis` (regenerar `uv.lock` con `make lock`).
+  - **core/celery.py, core/settings_celery.py**: Archivos eliminados (app Celery, `beat_schedule` `sync-movies-weekly` y broker/result backend Redis).
+  - **core/__init__.py**: Removida la carga de `celery_app` al iniciar Django (módulo vaciado).
+  - **core/settings.py**: Retirado `django_celery_beat` de `INSTALLED_APPS` y el import `from .settings_celery import *`.
+  - **apps/movies/tasks.py**: Eliminado el módulo y la tarea `sync_movies_weekly`.
+  - **Makefile**: Quitados los targets `celery-worker` y `celery-beat`.
+  - **.env / .env.example**: Eliminada la sección `Celery / Redis` (`CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`).
+  - **README.md**: Removidas las instrucciones de worker/beat de Celery.
+
 ## [0.3.0] — 2026-06-22 — Admin Unfold, Makefile y ajustes de estructura
 
 ### Added

@@ -3,9 +3,26 @@
 import pytest
 from django.urls import reverse
 
+from apps.movies import services
 from apps.movies.models import Movie, MovieLevel
-from apps.movies.services import assign_level, upsert_movie_from_omdb
+from apps.movies.services import assign_level, sync_movies, upsert_movie_from_omdb
 from apps.movies.tests.factories import CollectionFactory, MovieFactory
+
+
+class _FakeOMDBClient:
+    """Cliente OMDb falso para sincronización: registra los detalles pedidos."""
+
+    def __init__(self, *, search_items, details):
+        self._search_items = search_items
+        self._details = details
+        self.detail_calls: list[str] = []
+
+    def search(self, *, term, page=1, media_type="movie"):  # noqa: ARG002
+        return self._search_items if page == 1 else []
+
+    def detail(self, *, imdb_id):
+        self.detail_calls.append(imdb_id)
+        return self._details[imdb_id]
 
 
 @pytest.mark.parametrize(
@@ -47,6 +64,84 @@ def test_upsert_movie_is_idempotent_by_imdb_id():
     assert movie.imdb_votes == 2_300_000
     assert movie.level == MovieLevel.CASUAL
     assert "Thriller" in movie.genres
+
+
+def _detail(imdb_id, title, year, votes="2,300,000"):
+    return {
+        "imdbID": imdb_id,
+        "Title": title,
+        "Year": year,
+        "Genre": "Drama",
+        "imdbRating": "8.0",
+        "imdbVotes": votes,
+        "Poster": "N/A",
+    }
+
+
+@pytest.mark.django_db
+def test_sync_skips_movies_already_in_catalog(monkeypatch, settings):
+    """No vuelve a descargar ni consultar el detalle de una película existente."""
+    settings.OMDB_SEARCH_TERMS = ["term"]
+    settings.OMDB_MIN_YEAR = 1990
+    MovieFactory(imdb_id="tt_existing", year=2000)
+
+    fake = _FakeOMDBClient(
+        search_items=[
+            {"imdbID": "tt_existing", "Year": "2000"},
+            {"imdbID": "tt_new", "Year": "2005"},
+        ],
+        details={"tt_new": _detail("tt_new", "New Movie", "2005")},
+    )
+    monkeypatch.setattr(services, "OMDBClient", lambda *a, **k: fake)
+
+    result = sync_movies(pages=1, download_images=False)
+
+    assert result.created == 1
+    assert result.skipped == 1
+    assert fake.detail_calls == ["tt_new"]  # nunca se pidió el detalle del existente
+    assert Movie.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_sync_skips_movies_before_min_year(monkeypatch, settings):
+    """Descarta películas anteriores al año mínimo sin gastar llamada de detalle."""
+    settings.OMDB_SEARCH_TERMS = ["term"]
+    settings.OMDB_MIN_YEAR = 1990
+
+    fake = _FakeOMDBClient(
+        search_items=[
+            {"imdbID": "tt_old", "Year": "1985"},
+            {"imdbID": "tt_recent", "Year": "1999"},
+        ],
+        details={"tt_recent": _detail("tt_recent", "Recent", "1999")},
+    )
+    monkeypatch.setattr(services, "OMDBClient", lambda *a, **k: fake)
+
+    result = sync_movies(pages=1, download_images=False)
+
+    assert result.created == 1
+    assert result.skipped == 1
+    assert fake.detail_calls == ["tt_recent"]
+    assert not Movie.objects.filter(imdb_id="tt_old").exists()
+
+
+@pytest.mark.django_db
+def test_sync_min_year_override(monkeypatch, settings):
+    """El parámetro min_year sobreescribe OMDB_MIN_YEAR."""
+    settings.OMDB_SEARCH_TERMS = ["term"]
+    settings.OMDB_MIN_YEAR = 1990
+
+    fake = _FakeOMDBClient(
+        search_items=[{"imdbID": "tt_2003", "Year": "2003"}],
+        details={"tt_2003": _detail("tt_2003", "Y2003", "2003")},
+    )
+    monkeypatch.setattr(services, "OMDBClient", lambda *a, **k: fake)
+
+    result = sync_movies(pages=1, download_images=False, min_year=2010)
+
+    assert result.created == 0
+    assert result.skipped == 1
+    assert fake.detail_calls == []
 
 
 @pytest.mark.django_db

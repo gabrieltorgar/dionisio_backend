@@ -28,6 +28,7 @@ class SyncResult:
 
     created: int = 0
     updated: int = 0
+    skipped: int = 0
     errors: list[str] = field(default_factory=list)
 
 
@@ -128,11 +129,18 @@ def sync_movies(
     pages: int = 1,
     download_images: bool = True,
     terms: list[str] | None = None,
+    min_year: int | None = None,
 ) -> SyncResult:
-    """Sincroniza el catálogo desde OMDb por términos de búsqueda (HU-06)."""
+    """Sincroniza el catálogo desde OMDb por términos de búsqueda (HU-06).
+
+    Sincronización manual e incremental: solo descarga películas que aún no
+    están en el catálogo (omite las existentes sin consultar su detalle) y
+    descarta las estrenadas antes de `min_year` (por defecto `OMDB_MIN_YEAR`).
+    """
     client = OMDBClient()
     result = SyncResult()
     search_terms = terms or settings.OMDB_SEARCH_TERMS
+    year_floor = min_year if min_year is not None else settings.OMDB_MIN_YEAR
 
     for term in search_terms:
         for page in range(1, pages + 1):
@@ -140,8 +148,21 @@ def sync_movies(
                 imdb_id = item.get("imdbID")
                 if not imdb_id:
                     continue
+                # Incremental: nunca volvemos a bajar una película ya catalogada.
+                if Movie.objects.filter(imdb_id=imdb_id).exists():
+                    result.skipped += 1
+                    continue
+                # Pre-filtro por año con el dato del resultado de búsqueda para
+                # evitar gastar una llamada de detalle en películas antiguas.
+                if _parse_year(item.get("Year")) < year_floor:
+                    result.skipped += 1
+                    continue
                 try:
                     detail = client.detail(imdb_id=imdb_id)
+                    # Confirmación definitiva del año con el detalle completo.
+                    if _parse_year(detail.get("Year")) < year_floor:
+                        result.skipped += 1
+                        continue
                     created = upsert_movie_from_omdb(
                         payload=detail, download_image=download_images
                     )
@@ -155,9 +176,10 @@ def sync_movies(
                     logger.exception("Error sincronizando película %s", msg)
 
     logger.info(
-        "Sync OMDb: %s creadas, %s actualizadas, %s errores",
+        "Sync OMDb: %s creadas, %s actualizadas, %s omitidas, %s errores",
         result.created,
         result.updated,
+        result.skipped,
         len(result.errors),
     )
     return result

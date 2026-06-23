@@ -1,6 +1,6 @@
 .PHONY: help install migrate migrations run test cov lint format superuser shell \
         clean clean_migrations data sync flush initial-data-flush lock collectstatic \
-        setup dev celery-worker celery-beat
+        setup dev
 
 help:
 	@echo "Comandos disponibles:"
@@ -72,12 +72,6 @@ data:
 
 sync:
 	uv run python src/manage.py sync_movies --pages 2
-
-celery-worker:
-	uv run celery -A core worker -l info
-
-celery-beat:
-	uv run celery -A core beat -l info
 
 flush:
 	uv run python src/manage.py flush

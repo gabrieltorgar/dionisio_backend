@@ -10,7 +10,7 @@ lecturas complejas. PYTHONPATH raíz: `src/` (imports desde `apps.`, `common.`, 
 ```
 src/
   api/                 # urls raíz, health, JWT
-  core/                # settings, env, celery
+  core/                # settings, env
   common/              # modelos abstractos (TimestampedModel)
   apps/
     movies/            # catálogo, sync OMDb, colecciones (E2)
@@ -46,19 +46,17 @@ en `core/settings_unfold.py`.
 ```bash
 uv run python manage.py sync_movies --pages 2                 # manual (HU-06)
 uv run python manage.py sync_movies --terms batman matrix     # términos propios
+uv run python manage.py sync_movies --min-year 2000           # sobreescribe OMDB_MIN_YEAR
 ```
 
 OMDb no expone "populares": el catálogo se puebla buscando por una lista de
 términos (`OMDB_SEARCH_TERMS`) y obteniendo el detalle de cada resultado por su
 ID de IMDb. El `level` se asigna por `imdbVotes` (más votos → más mainstream).
 
-Tarea Celery semanal `sync_movies_weekly` (domingos 03:00 UTC). Requiere
-`OMDB_API_KEY` en el `.env`. Worker + beat:
-
-```bash
-uv run celery -A core worker -l info
-uv run celery -A core beat -l info
-```
+La sincronización es **manual e incremental**: requiere `OMDB_API_KEY` en el
+`.env`, solo descarga películas que aún no están en el catálogo (omite las
+existentes) y descarta las estrenadas antes de `OMDB_MIN_YEAR` (por defecto
+1990). También puede dispararse desde el backoffice con `POST /api/movies/sync/`.
 
 ## Endpoints principales
 

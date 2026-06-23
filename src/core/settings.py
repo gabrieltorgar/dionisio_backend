@@ -40,7 +40,6 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "corsheaders",
     "django_filters",
-    "django_celery_beat",
 ]
 
 LOCAL_APPS = [
@@ -132,6 +131,8 @@ OMDB_SEARCH_TERMS = env.list(
         "dead",
     ],
 )
+# Año mínimo de estreno admitido en el catálogo (se descartan películas previas).
+OMDB_MIN_YEAR = env.int("OMDB_MIN_YEAR", default=1990)
 
 # --- Logging (rotación obligatoria) ---
 LOG_DIR = Path(env("LOG_DIR", default=str(BASE_DIR / "logs")))
@@ -168,5 +169,4 @@ LOGGING = {
 from .env import *  # noqa: E402,F401,F403
 from .settings_rest import *  # noqa: E402,F401,F403
 from .settings_cors import *  # noqa: E402,F401,F403
-from .settings_celery import *  # noqa: E402,F401,F403
 from .settings_unfold import *  # noqa: E402,F401,F403

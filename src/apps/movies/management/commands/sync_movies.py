@@ -21,17 +21,25 @@ class Command(BaseCommand):
             action="store_true",
             help="No descargar posters localmente.",
         )
+        parser.add_argument(
+            "--min-year",
+            type=int,
+            default=None,
+            help="Año mínimo de estreno (por defecto OMDB_MIN_YEAR).",
+        )
 
     def handle(self, *_args, **options) -> None:
         result = sync_movies(
             pages=options["pages"],
             download_images=not options["no_images"],
             terms=options["terms"],
+            min_year=options["min_year"],
         )
         self.stdout.write(
             self.style.SUCCESS(
                 f"Sync completa: {result.created} creadas, "
-                f"{result.updated} actualizadas, {len(result.errors)} errores."
+                f"{result.updated} actualizadas, {result.skipped} omitidas, "
+                f"{len(result.errors)} errores."
             )
         )
         for error in result.errors:
