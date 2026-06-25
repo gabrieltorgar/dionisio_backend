@@ -25,6 +25,24 @@ class _FakeOMDBClient:
         return self._details[imdb_id]
 
 
+class _FakeWikidata:
+    """Cliente Wikidata falso: mapea imdb_id → título en español."""
+
+    def __init__(self, mapping=None):
+        self._mapping = mapping or {}
+
+    def spanish_title(self, *, imdb_id):
+        return self._mapping.get(imdb_id, "")
+
+
+def _patch_clients(monkeypatch, *, omdb, wikidata=None):
+    """Inyecta clientes falsos de OMDb y Wikidata en el módulo de servicios."""
+    monkeypatch.setattr(services, "OMDBClient", lambda *a, **k: omdb)
+    monkeypatch.setattr(
+        services, "WikidataClient", lambda *a, **k: wikidata or _FakeWikidata()
+    )
+
+
 @pytest.mark.parametrize(
     ("votes", "expected"),
     [
@@ -92,7 +110,7 @@ def test_sync_skips_movies_already_in_catalog(monkeypatch, settings):
         ],
         details={"tt_new": _detail("tt_new", "New Movie", "2005")},
     )
-    monkeypatch.setattr(services, "OMDBClient", lambda *a, **k: fake)
+    _patch_clients(monkeypatch, omdb=fake)
 
     result = sync_movies(pages=1, download_images=False)
 
@@ -115,7 +133,7 @@ def test_sync_skips_movies_before_min_year(monkeypatch, settings):
         ],
         details={"tt_recent": _detail("tt_recent", "Recent", "1999")},
     )
-    monkeypatch.setattr(services, "OMDBClient", lambda *a, **k: fake)
+    _patch_clients(monkeypatch, omdb=fake)
 
     result = sync_movies(pages=1, download_images=False)
 
@@ -135,13 +153,64 @@ def test_sync_min_year_override(monkeypatch, settings):
         search_items=[{"imdbID": "tt_2003", "Year": "2003"}],
         details={"tt_2003": _detail("tt_2003", "Y2003", "2003")},
     )
-    monkeypatch.setattr(services, "OMDBClient", lambda *a, **k: fake)
+    _patch_clients(monkeypatch, omdb=fake)
 
     result = sync_movies(pages=1, download_images=False, min_year=2010)
 
     assert result.created == 0
     assert result.skipped == 1
     assert fake.detail_calls == []
+
+
+@pytest.mark.django_db
+def test_sync_sets_spanish_title_from_wikidata(monkeypatch, settings):
+    """El título en español de Wikidata se guarda en title_es (y manda en display_title)."""
+    settings.OMDB_SEARCH_TERMS = ["term"]
+    settings.OMDB_MIN_YEAR = 1990
+
+    omdb = _FakeOMDBClient(
+        search_items=[{"imdbID": "tt0137523", "Year": "1999"}],
+        details={"tt0137523": _detail("tt0137523", "Fight Club", "1999")},
+    )
+    wikidata = _FakeWikidata({"tt0137523": "El club de la lucha"})
+    _patch_clients(monkeypatch, omdb=omdb, wikidata=wikidata)
+
+    result = sync_movies(pages=1, download_images=False)
+
+    assert result.created == 1
+    movie = Movie.objects.get(imdb_id="tt0137523")
+    assert movie.title == "Fight Club"
+    assert movie.title_es == "El club de la lucha"
+    assert movie.display_title == "El club de la lucha"
+
+
+@pytest.mark.django_db
+def test_sync_without_spanish_title_leaves_title_es_empty(monkeypatch, settings):
+    """Si Wikidata no tiene título ES, title_es queda vacío y display_title usa el original."""
+    settings.OMDB_SEARCH_TERMS = ["term"]
+    settings.OMDB_MIN_YEAR = 1990
+
+    omdb = _FakeOMDBClient(
+        search_items=[{"imdbID": "tt_only_en", "Year": "2001"}],
+        details={"tt_only_en": _detail("tt_only_en", "Only English", "2001")},
+    )
+    _patch_clients(monkeypatch, omdb=omdb)  # Wikidata falso devuelve ""
+
+    sync_movies(pages=1, download_images=False)
+
+    movie = Movie.objects.get(imdb_id="tt_only_en")
+    assert movie.title_es == ""
+    assert movie.display_title == "Only English"
+
+
+def test_wikidata_title_from_article_strips_disambiguation():
+    """El respaldo por artículo de Wikipedia decodifica el slug y quita paréntesis."""
+    from apps.movies.wikidata import WikidataClient
+
+    parse = WikidataClient._title_from_article
+    assert parse("https://es.wikipedia.org/wiki/El_club_de_la_lucha") == "El club de la lucha"
+    assert parse("https://es.wikipedia.org/wiki/Origen_(pel%C3%ADcula)") == "Origen"
+    assert parse("") == ""
 
 
 @pytest.mark.django_db

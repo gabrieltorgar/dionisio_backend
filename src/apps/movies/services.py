@@ -18,6 +18,7 @@ from django.db import transaction
 
 from apps.movies.models import Movie, MovieLevel
 from apps.movies.omdb import OMDBClient, OMDBError
+from apps.movies.wikidata import WikidataClient
 
 logger = logging.getLogger("apps")
 
@@ -96,8 +97,14 @@ def download_poster(*, poster_url: str, imdb_id: str) -> str:
 
 
 @transaction.atomic
-def upsert_movie_from_omdb(*, payload: dict[str, Any], download_image: bool = True) -> bool:
-    """Crea o actualiza una película desde un detalle OMDb. Devuelve True si fue creada."""
+def upsert_movie_from_omdb(
+    *, payload: dict[str, Any], download_image: bool = True, title_es: str = ""
+) -> bool:
+    """Crea o actualiza una película desde un detalle OMDb. Devuelve True si fue creada.
+
+    `title_es` (título en español, p. ej. de Wikidata) solo se escribe cuando se
+    proporciona, para no sobrescribir una traducción existente con vacío.
+    """
     imdb_id = payload["imdbID"]
     poster = payload.get("Poster", "")
     poster_url = poster if poster and poster != "N/A" else ""
@@ -112,6 +119,8 @@ def upsert_movie_from_omdb(*, payload: dict[str, Any], download_image: bool = Tr
         "imdb_rating": _parse_float(payload.get("imdbRating")),
         "imdb_votes": votes,
     }
+    if title_es:
+        defaults["title_es"] = title_es
 
     movie, created = Movie.objects.update_or_create(imdb_id=imdb_id, defaults=defaults)
 
@@ -138,6 +147,7 @@ def sync_movies(
     descarta las estrenadas antes de `min_year` (por defecto `OMDB_MIN_YEAR`).
     """
     client = OMDBClient()
+    wikidata = WikidataClient()
     result = SyncResult()
     search_terms = terms or settings.OMDB_SEARCH_TERMS
     year_floor = min_year if min_year is not None else settings.OMDB_MIN_YEAR
@@ -163,8 +173,12 @@ def sync_movies(
                     if _parse_year(detail.get("Year")) < year_floor:
                         result.skipped += 1
                         continue
+                    # Título en español desde Wikidata (OMDb no traduce).
+                    title_es = wikidata.spanish_title(imdb_id=imdb_id)
                     created = upsert_movie_from_omdb(
-                        payload=detail, download_image=download_images
+                        payload=detail,
+                        download_image=download_images,
+                        title_es=title_es,
                     )
                     if created:
                         result.created += 1

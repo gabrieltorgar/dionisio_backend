@@ -58,6 +58,12 @@ La sincronización es **manual e incremental**: requiere `OMDB_API_KEY` en el
 existentes) y descarta las estrenadas antes de `OMDB_MIN_YEAR` (por defecto
 1990). También puede dispararse desde el backoffice con `POST /api/movies/sync/`.
 
+OMDb no entrega traducciones. El título en español (`title_es`) se obtiene de
+**Wikidata** (datos CC0) mapeando el `imdb_id` por su propiedad `P345`, con
+respaldo al título del artículo de la **Wikipedia en español**. Wikimedia exige
+un `User-Agent` con contacto: configúralo en `WIKIDATA_USER_AGENT`. Si no hay
+traducción disponible, `display_title` usa el título original.
+
 ## Endpoints principales
 
 | Método | Ruta | Descripción | Auth |

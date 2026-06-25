@@ -134,6 +134,16 @@ OMDB_SEARCH_TERMS = env.list(
 # Año mínimo de estreno admitido en el catálogo (se descartan películas previas).
 OMDB_MIN_YEAR = env.int("OMDB_MIN_YEAR", default=1990)
 
+# --- Wikidata (títulos en español; datos CC0, sin restricciones de almacenamiento) ---
+# OMDb no traduce: el título en español se obtiene de Wikidata por IMDb ID (P345),
+# con respaldo al título del artículo de la Wikipedia en español.
+WIKIDATA_SPARQL_URL = env("WIKIDATA_SPARQL_URL", default="https://query.wikidata.org/sparql")
+# Wikimedia exige un User-Agent descriptivo con contacto. Ajusta el correo/URL.
+WIKIDATA_USER_AGENT = env(
+    "WIKIDATA_USER_AGENT",
+    default="DionisioBot/1.0 (https://dionisio.app; contacto@dionisio.app)",
+)
+
 # --- Logging (rotación obligatoria) ---
 LOG_DIR = Path(env("LOG_DIR", default=str(BASE_DIR / "logs")))
 LOG_DIR.mkdir(parents=True, exist_ok=True)

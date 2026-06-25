@@ -1,5 +1,21 @@
 # Changelog — Dionisio Backend
 
+## [0.5.0] — 2026-06-23 — Títulos en español vía Wikidata y baja definitiva de TMDB
+
+### Added
+
+- **apps/movies/wikidata.py — Cliente Wikidata**: Nuevo `WikidataClient.spanish_title(imdb_id)` que consulta el SPARQL endpoint por la propiedad IMDb (`P345`) y devuelve la etiqueta `es` del título; como respaldo usa el título del artículo de la Wikipedia en español (decodifica el slug y quita la desambiguación entre paréntesis). Tolerante a fallos: registra y devuelve cadena vacía sin interrumpir el sync.
+- **core/settings.py + .env(.example) — Config Wikidata**: `WIKIDATA_SPARQL_URL` y `WIKIDATA_USER_AGENT` (Wikimedia exige User-Agent con contacto).
+- **apps/movies/tests/test_movies.py — Tests de traducción**: Casos para `title_es` poblado desde Wikidata, ausencia de traducción (fallback a título original) y parseo del título de artículo de Wikipedia. Cliente Wikidata falso reutilizable.
+
+### Changed
+
+- **apps/movies/services.py — Enriquecimiento en español**: `upsert_movie_from_omdb` acepta `title_es` (solo lo escribe si no está vacío, sin sobrescribir traducciones existentes); `sync_movies` resuelve el título en español vía `WikidataClient` para cada película nueva.
+
+### Removed
+
+- **apps/movies/tmdb.py — Cliente TMDB**: Eliminado el módulo (ya estaba deprecado y vacío). El catálogo usa OMDb para los datos y Wikidata/Wikipedia para el español; TMDB queda descartado por sus políticas de almacenamiento.
+
 ## [0.4.0] — 2026-06-23 — Sincronización manual e incremental del catálogo (HU-06)
 
 ### Added
