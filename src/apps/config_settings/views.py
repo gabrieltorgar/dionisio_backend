@@ -45,7 +45,9 @@ class GameSettingsAdminView(APIView):
                 user=request.user,
             )
         except DjangoValidationError as exc:
-            return Response({"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST
+            )
         return Response(GameSettingsSerializer(get_game_settings()).data)
 
     def delete(self, request: Request) -> Response:

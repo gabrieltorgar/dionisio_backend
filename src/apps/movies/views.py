@@ -28,7 +28,10 @@ class MovieViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    """`/api/movies/` — listado público con filtros; edición para staff (HU-04, HU-33)."""
+    """`/api/movies/` — listado público con filtros; edición para staff.
+
+    HU-04, HU-33.
+    """
 
     filterset_class = MovieFilter
     permission_classes = [IsStaffOrReadOnly]

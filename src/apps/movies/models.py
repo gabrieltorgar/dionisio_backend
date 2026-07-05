@@ -41,7 +41,9 @@ class Movie(TimestampedModel):
     title = models.CharField(_("título"), max_length=255)
     title_es = models.CharField(_("título en español"), max_length=255, blank=True)
     year = models.PositiveSmallIntegerField(_("año"))
-    poster_path = models.CharField(_("ruta local del poster"), max_length=500, blank=True)
+    poster_path = models.CharField(
+        _("ruta local del poster"), max_length=500, blank=True
+    )
     poster_url = models.URLField(_("URL del poster en OMDb"), blank=True)
     genres = models.JSONField(_("géneros"), default=list, blank=True)
     level = models.CharField(

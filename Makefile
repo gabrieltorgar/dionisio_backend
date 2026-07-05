@@ -1,4 +1,4 @@
-.PHONY: help install migrate migrations run test cov lint format superuser shell \
+.PHONY: help install migrate migrations run test cov lint format check superuser shell \
         clean clean_migrations data sync flush initial-data-flush lock collectstatic \
         setup dev
 
@@ -42,6 +42,12 @@ lint:
 
 format:
 	uv run ruff format src
+
+# Gate de calidad (lo corre CI): migraciones al día + ruff + pytest.
+check:
+	uv run python src/manage.py makemigrations --dry-run --check
+	uv run ruff check src
+	uv run pytest
 
 superuser:
 	DJANGO_SUPERUSER_USERNAME=dev \

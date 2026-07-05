@@ -1,0 +1,20 @@
+# Dependencias de runtime para el despliegue serverless en Vercel (@vercel/python).
+# Replica el grupo de runtime de pyproject.toml; las herramientas de dev/test se
+# excluyen para mantener pequeño el bundle serverless. Mantener en sync con pyproject.toml.
+Django==5.2.15
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.9.0
+django-environ==0.11.2
+django-filter==24.3
+django-unfold==0.98.0
+# Storage de media compatible con S3 en Cloudflare R2 ([s3] arrastra boto3/botocore).
+django-storages[s3]==1.14.6
+boto3==1.43.40
+# psycopg2-binary trae libpq precompilada — requerido en Vercel (sin libpq del sistema).
+psycopg2-binary==2.9.12
+pillow==11.3.0
+requests==2.34.2
+PyJWT==2.13.0
+# Sirve estáticos (admin/DRF) desde la función; sin paso de collectstatic.
+whitenoise==6.12.0

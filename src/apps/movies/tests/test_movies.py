@@ -164,7 +164,7 @@ def test_sync_min_year_override(monkeypatch, settings):
 
 @pytest.mark.django_db
 def test_sync_sets_spanish_title_from_wikidata(monkeypatch, settings):
-    """El título en español de Wikidata se guarda en title_es (y manda en display_title)."""
+    """El título ES de Wikidata se guarda en title_es (y manda en display_title)."""
     settings.OMDB_SEARCH_TERMS = ["term"]
     settings.OMDB_MIN_YEAR = 1990
 
@@ -186,7 +186,10 @@ def test_sync_sets_spanish_title_from_wikidata(monkeypatch, settings):
 
 @pytest.mark.django_db
 def test_sync_without_spanish_title_leaves_title_es_empty(monkeypatch, settings):
-    """Si Wikidata no tiene título ES, title_es queda vacío y display_title usa el original."""
+    """Sin título ES en Wikidata, title_es queda vacío y display_title usa el original.
+
+    (Camino de respaldo del sync.)
+    """
     settings.OMDB_SEARCH_TERMS = ["term"]
     settings.OMDB_MIN_YEAR = 1990
 
@@ -208,7 +211,8 @@ def test_wikidata_title_from_article_strips_disambiguation():
     from apps.movies.wikidata import WikidataClient
 
     parse = WikidataClient._title_from_article
-    assert parse("https://es.wikipedia.org/wiki/El_club_de_la_lucha") == "El club de la lucha"
+    url = "https://es.wikipedia.org/wiki/El_club_de_la_lucha"
+    assert parse(url) == "El club de la lucha"
     assert parse("https://es.wikipedia.org/wiki/Origen_(pel%C3%ADcula)") == "Origen"
     assert parse("") == ""
 

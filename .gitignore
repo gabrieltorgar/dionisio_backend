@@ -5,7 +5,6 @@ venv/
 *.egg-info/
 .env
 src/core/.env
-src/core/env.py
 media/
 staticfiles/
 logs/
@@ -16,3 +15,6 @@ htmlcov/
 .ruff_cache/
 db.sqlite3
 .DS_Store
+
+# Vercel
+.vercel/
