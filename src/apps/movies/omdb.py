@@ -49,7 +49,9 @@ class OMDBClient:
         last_error = "desconocido"
         for attempt in range(_MAX_RETRIES):
             try:
-                response = self.session.get(self.base_url + "/", params=query, timeout=15)
+                response = self.session.get(
+                    self.base_url + "/", params=query, timeout=15
+                )
             except requests.RequestException as exc:
                 last_error = str(exc)
                 time.sleep(_BACKOFF_BASE_SECONDS * 2**attempt)

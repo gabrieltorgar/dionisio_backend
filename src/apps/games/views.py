@@ -36,7 +36,9 @@ class GameViewSet(viewsets.GenericViewSet):
         try:
             game = create_game(**serializer.validated_data)
         except DjangoValidationError as exc:
-            return Response({"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST
+            )
         return Response(GameSerializer(game).data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, _request: Request, pk: str | None = None) -> Response:
@@ -65,14 +67,16 @@ class GameViewSet(viewsets.GenericViewSet):
     def turn_result(
         self, request: Request, pk: str | None = None, turn_id: str | None = None
     ) -> Response:
-        """`POST /api/games/{id}/turns/{turn_id}/result/` — registra el resultado (HU-13)."""
+        """`POST /api/games/{id}/turns/{turn_id}/result/` — registra el resultado."""
         turn = get_object_or_404(Turn, pk=turn_id, game_id=pk)
         serializer = TurnResultSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
             turn = register_turn_result(turn=turn, **serializer.validated_data)
         except DjangoValidationError as exc:
-            return Response({"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST
+            )
         return Response(TurnSerializer(turn).data)
 
     @action(detail=True, methods=["patch"])

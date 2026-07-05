@@ -51,7 +51,10 @@ class Game(TimestampedModel):
 
 
 class Team(TimestampedModel):
-    """Equipo/productora de una partida. `score` admite medias estrellas (HU-13, HU-21)."""
+    """Equipo/productora de una partida.
+
+    `score` admite medias estrellas (HU-13, HU-21).
+    """
 
     game = models.ForeignKey(
         Game, on_delete=models.CASCADE, related_name="teams", verbose_name=_("partida")

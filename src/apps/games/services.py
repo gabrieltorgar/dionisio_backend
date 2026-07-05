@@ -48,7 +48,9 @@ def register_turn_result(
     speed_bonus_threshold: int,
     stolen_by_id: int | None = None,
 ) -> Turn:
-    """Registra el resultado de un turno y actualiza el marcador (HU-13, HU-21, HU-22, HU-25).
+    """Registra el resultado de un turno y actualiza el marcador.
+
+    HU-13, HU-21, HU-22, HU-25.
 
     Aplica bonus de velocidad, recompensa de robo y bonus de racha.
 

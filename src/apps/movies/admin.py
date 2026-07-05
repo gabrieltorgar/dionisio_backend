@@ -8,7 +8,14 @@ from apps.movies.models import Collection, Movie
 
 @admin.register(Movie)
 class MovieAdmin(ModelAdmin):
-    list_display = ("display_title", "year", "level", "imdb_votes", "imdb_rating", "is_active")
+    list_display = (
+        "display_title",
+        "year",
+        "level",
+        "imdb_votes",
+        "imdb_rating",
+        "is_active",
+    )
     list_filter = ("level", "is_active")
     search_fields = ("title", "title_es", "imdb_id")
     list_editable = ("level", "is_active")
