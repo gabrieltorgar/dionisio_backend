@@ -29,7 +29,9 @@ class GameCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError("Se requieren al menos dos equipos.")
         names = [t["name"] for t in value]
         if len(names) != len(set(names)):
-            raise serializers.ValidationError("Los nombres de equipo no pueden repetirse.")
+            raise serializers.ValidationError(
+                "Los nombres de equipo no pueden repetirse."
+            )
         return value
 
 
@@ -38,7 +40,15 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ["id", "mode", "config", "status", "teams", "started_at", "finished_at"]
+        fields = [
+            "id",
+            "mode",
+            "config",
+            "status",
+            "teams",
+            "started_at",
+            "finished_at",
+        ]
         read_only_fields = fields
 
 

@@ -1,5 +1,22 @@
 # Changelog — Dionisio Backend
 
+## [0.6.0] — 2026-07-05 — Compatibilidad con Vercel, storage R2 y verificación por código universal
+
+### Added
+
+- **vercel.json + api/index.py + requirements.txt — Despliegue serverless en Vercel**: Entrypoint WSGI que pone `src/` en el path y construye la app; `vercel.json` enruta todo a la función; `requirements.txt` con las dependencias de runtime (en sync con `pyproject.toml`). Tomado como referencia del proyecto ojadapo_backend.
+- **core/env.py — Módulo de settings de estáticos/media/seguridad**: Ahora versionado (antes estaba en `.gitignore` pero `settings.py` lo importaba, rompiendo el arranque). Define STATIC/MEDIA, WhiteNoise por finders (sin `collectstatic`) y el bloque de endurecimiento de producción. `STATIC_ROOT` cae a `/tmp` en Vercel (fs de solo lectura).
+- **core/settings_storages.py — Storage de media en Cloudflare R2**: Backend S3 (`django-storages`) activable con `USE_R2` o al detectar credenciales; URLs públicas limpias por dominio propio, sin ACLs ni querystrings firmados. En local cae a `FileSystemStorage`. `whitenoise` y `storages` añadidos; `django-storages[s3]`/`boto3` en dependencias.
+- **common/verification.py — Verificación de cuenta por código universal**: `send_verification_code()`, `is_valid_code()` y `VerificationPurpose` que simulan la verificación por correo con un único código (`EMAIL_VERIFICATION_UNIVERSAL_CODE`, default `979797`) mientras no haya backend de email.
+- **.github/workflows/ci.yml + make check — Gate de calidad**: Corre `makemigrations --check`, `ruff` y `pytest` en cada push/PR a `dev`/`main`. Como pytest importa `core.settings`, previene la clase de error de configuración que llega a producción.
+- **common/tests — Tests de storage y verificación**: FS local por defecto, opciones de R2 (URLs públicas sin firma) y validación del código universal.
+
+### Changed
+
+- **core/settings.py — Endurecimiento para serverless**: Detección de `VERCEL`, confianza automática en los hostnames del deployment para `ALLOWED_HOSTS`/`CSRF_TRUSTED_ORIGINS`, logging a consola siempre (handler de archivo solo si el disco es escribible, evitando el crash de cold start en el fs de solo lectura), middleware de WhiteNoise e import de `settings_storages`.
+- **core/.env.example — Variables nuevas**: `CSRF_TRUSTED_ORIGINS`, `EMAIL_VERIFICATION_UNIVERSAL_CODE`, bloque R2 (reemplaza al de AWS/S3 genérico) y referencia de las env vars de Vercel.
+- **pyproject.toml — ruff excluye migraciones**: `extend-exclude = ["*/migrations/*"]` (autogeneradas), igual que el proyecto de referencia; se corrigieron además líneas largas (E501) pre-existentes para que el gate quede en verde.
+
 ## [0.5.0] — 2026-06-23 — Títulos en español vía Wikidata y baja definitiva de TMDB
 
 ### Added

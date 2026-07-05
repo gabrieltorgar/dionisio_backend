@@ -1,0 +1,32 @@
+name: CI
+
+# Gate de calidad: corre `make check` (makemigrations --check + ruff + pytest)
+# en cada push/PR a dev y main. pytest importa `core.settings`, así que un error
+# de sintaxis o de import en settings rompe aquí y NUNCA llega a Vercel.
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Settings usa un default de SECRET_KEY inseguro; en CI damos uno de test.
+      SECRET_KEY: ci-not-a-secret-key-for-tests-only
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies (incl. dev group)
+        run: uv sync
+
+      - name: make check (migraciones + ruff + pytest)
+        run: make check
