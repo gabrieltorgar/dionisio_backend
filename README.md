@@ -35,6 +35,11 @@ make run                                  # servidor en :8500
 
 O directamente: `uv run python src/manage.py <comando>`.
 
+> ⚠️ Usa `uv`/`make`, **no `pip install` directo**. El `requirements.txt` de la
+> raíz es solo para el runtime de Vercel; instalarlo con `pip` sobre un Python
+> gestionado por uv/el sistema falla con `error: externally-managed-environment`.
+> `uv sync` (que corre `make install`) crea y usa su propio `.venv`.
+
 > Las migraciones no están versionadas en este scaffold inicial: genéralas con
 > `make migrations` tras la primera instalación.
 
