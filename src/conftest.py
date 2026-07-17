@@ -1,6 +1,7 @@
 """Fixtures compartidas de pytest."""
 
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 
@@ -11,8 +12,6 @@ def api_client() -> APIClient:
 
 @pytest.fixture
 def staff_user(db):
-    from django.contrib.auth.models import User
-
-    return User.objects.create_user(
-        username="staff", password="pass1234", is_staff=True
+    return get_user_model().objects.create_user(
+        email="staff@dionisio.app", password="pass1234", is_staff=True
     )

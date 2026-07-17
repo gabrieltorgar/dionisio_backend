@@ -50,11 +50,8 @@ check:
 	uv run pytest
 
 superuser:
-	DJANGO_SUPERUSER_USERNAME=dev \
-	DJANGO_SUPERUSER_FIRST_NAME="Developer" \
-	DJANGO_SUPERUSER_LAST_NAME="User" \
-	DJANGO_SUPERUSER_PASSWORD=Mexico123. \
 	DJANGO_SUPERUSER_EMAIL="admin@develop.com" \
+	DJANGO_SUPERUSER_PASSWORD=Mexico123. \
 	uv run python src/manage.py createsuperuser --noinput
 
 shell:

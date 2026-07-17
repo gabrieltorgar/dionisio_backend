@@ -3,7 +3,7 @@
 import logging
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractBaseUser
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
@@ -25,7 +25,9 @@ def get_game_settings() -> dict[str, int]:
 
 
 @transaction.atomic
-def set_game_setting(*, key: str, value: int, user: User | None = None) -> GameSetting:
+def set_game_setting(
+    *, key: str, value: int, user: AbstractBaseUser | None = None
+) -> GameSetting:
     """Crea o actualiza un override y registra el cambio (HU-35).
 
     Raises:
@@ -49,7 +51,7 @@ def set_game_setting(*, key: str, value: int, user: User | None = None) -> GameS
 
 
 @transaction.atomic
-def reset_game_setting(*, key: str, user: User | None = None) -> None:
+def reset_game_setting(*, key: str, user: AbstractBaseUser | None = None) -> None:
     """Elimina el override de BD; el parámetro vuelve a su env var (HU-35)."""
     deleted, _ = GameSetting.objects.filter(key=key).delete()
     if deleted:

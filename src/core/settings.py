@@ -70,6 +70,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
+    "apps.users",
     "apps.movies",
     "apps.games",
     "apps.config_settings",
@@ -131,6 +132,9 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Modelo de usuario propio: autenticación por correo electrónico (no username).
+AUTH_USER_MODEL = "users.User"
 
 # --- Parámetros de juego (HU-09): defaults seguros vía env vars ---
 GAME_SETTINGS_DEFAULTS = {
@@ -236,6 +240,6 @@ if not ON_VERCEL:
 # --- Bloques modulares ---
 from .env import *  # noqa: E402,F401,F403
 from .settings_cors import *  # noqa: E402,F401,F403
-from .settings_rest import *  # noqa: E402,F401,F403
+from .settings_rest_framework import *  # noqa: E402,F401,F403
 from .settings_storages import *  # noqa: E402,F401,F403
 from .settings_unfold import *  # noqa: E402,F401,F403
