@@ -37,7 +37,7 @@ class GameSettingHistory(TimestampedModel):
     key = models.CharField(_("clave"), max_length=64, db_index=True)
     value = models.IntegerField(_("valor"))
     changed_by = models.ForeignKey(
-        "auth.User",
+        settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
