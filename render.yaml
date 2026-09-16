@@ -1,0 +1,27 @@
+# Despliegue del backend en Render con soporte de WebSockets (lotería en vivo).
+# Render mantiene el proceso vivo, así que Daphne puede sostener las conexiones.
+services:
+  - type: web
+    name: dionisio-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /api/health/
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        # Ej.: https://app-dionisio.vercel.app
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      # Opcional: solo si se escala a más de una instancia. Sin REDIS_URL se usa
+      # la capa de canales en memoria, válida para un único proceso.
+      - key: REDIS_URL
+        sync: false

@@ -15,5 +15,6 @@ urlpatterns = [
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("", include("apps.movies.urls")),
     path("", include("apps.games.urls")),
+    path("", include("apps.loteria.urls")),
     path("config/", include("apps.config_settings.urls")),
 ]

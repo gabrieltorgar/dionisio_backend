@@ -1,5 +1,37 @@
 # Changelog — Dionisio Backend
 
+## [0.7.0] — 2026-09-16 — Lotería mexicana multijugador (WebSockets)
+
+### Added
+
+- **App `apps.loteria`**: salas de lotería en tiempo real con Django Channels.
+  - **Modelos** `Room` (código de 6 caracteres, baraja barajada, cartas
+    cantadas, ronda, pausa, ganador) y `Player` (tabla de 16 cartas, marcas,
+    token). El estado vive en base de datos: un jugador puede recargar o perder
+    la señal y vuelve con su tabla y sus marcas intactas.
+  - **Catálogo** `cards.py` con las 54 cartas del orden tradicional; el número
+    de carta es el contrato con el frontend para resolver su ilustración.
+  - **Servicios**: crear sala, unirse (valida código, nombre duplicado, sala
+    llena y partida en curso), iniciar ronda (rebaraja y reparte tablas
+    nuevas), cantar carta sin repetir, marcar/desmarcar y **validar el grito de
+    lotería contra lo realmente cantado** (si marcó de más se rechaza con el
+    motivo y la partida sigue).
+  - **WebSocket** `ws/loteria/<código>/?token=…` (`LoteriaConsumer`): un grupo
+    de canales por sala, canto automático cada `draw_interval_ms` (pausable y
+    adelantable por el anfitrión) y difusión de cartas, marcas y ganador.
+  - **REST** `POST /api/loteria/rooms/`, `POST /api/loteria/rooms/<código>/join/`,
+    `GET /api/loteria/rooms/<código>/` y `GET /api/loteria/cards/`.
+- **Despliegue ASGI**: `Dockerfile`, `Procfile` y `render.yaml`. Vercel
+  (serverless) no sostiene WebSockets; la API REST sigue igual ahí, pero la
+  lotería necesita el proceso persistente. `REDIS_URL` es opcional: sin ella se
+  usa la capa de canales en memoria (un solo proceso).
+
+### Changed
+
+- `core/asgi.py` enruta HTTP + WebSocket (`ProtocolTypeRouter`), `daphne` y
+  `channels` entran en `INSTALLED_APPS` y `settings_channels.py` elige la capa
+  de canales según `REDIS_URL`.
+
 ## [0.6.0] — 2026-07-05 — Compatibilidad con Vercel, storage R2 y verificación por código universal
 
 ### Added
