@@ -152,3 +152,41 @@ make check             # migraciones al día + ruff + pytest (lo mismo que corre
 El workflow `.github/workflows/ci.yml` corre `make check` en cada push/PR a
 `dev` y `main`: como pytest importa `core.settings`, cualquier error de import o
 de configuración se detecta en CI y **nunca llega a Vercel**.
+
+## Lotería en tiempo real (WebSockets)
+
+El módulo `apps.loteria` sirve las salas de lotería multijugador sobre
+**Django Channels**. Conviven dos capas:
+
+| Capa | Ruta | Transporte |
+| --- | --- | --- |
+| Alta de sala y de jugador | `POST /api/loteria/rooms/`, `POST /api/loteria/rooms/<código>/join/` | HTTP |
+| Catálogo de la baraja | `GET /api/loteria/cards/` | HTTP |
+| Partida en vivo | `ws/loteria/<código>/?token=<token>` | WebSocket |
+
+### Despliegue
+
+**Vercel no sostiene WebSockets**: su runtime serverless corta la conexión.
+El `vercel.json` actual sigue sirviendo la API REST, pero para la lotería hay
+que correr el proceso ASGI (Daphne) en un host persistente. Se incluye:
+
+- `Dockerfile` — imagen lista (`daphne core.asgi:application`).
+- `render.yaml` — servicio web de Render con healthcheck en `/api/health/`.
+- `Procfile` — para hosts tipo Railway/Heroku.
+
+Variables relevantes:
+
+- `DATABASE_URL` — misma base que usa el resto de la API.
+- `CORS_ALLOWED_ORIGINS` — debe incluir el origen del frontend.
+- `REDIS_URL` — **opcional**. Sin ella se usa la capa de canales en memoria,
+  que basta para un solo proceso; con más de una instancia es obligatoria para
+  que los jugadores de una misma sala se vean entre sí.
+
+En el frontend hay que apuntar `VITE_REALTIME_BASE_URL` a ese host
+(por ejemplo `https://dionisio-backend.onrender.com/api`); si no se define, se
+asume el mismo backend que `VITE_API_BASE_URL`.
+
+### Desarrollo
+
+`make run` levanta Daphne (Channels sustituye el `runserver` de Django), así que
+los WebSockets funcionan en local sin configuración extra.

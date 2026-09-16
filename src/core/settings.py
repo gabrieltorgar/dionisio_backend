@@ -49,6 +49,9 @@ if _VERCEL_HOSTS:
 
 # --- Aplicaciones ---
 DJANGO_APPS = [
+    # Daphne debe ir PRIMERO: reemplaza runserver por su servidor ASGI para
+    # que los WebSockets de la lotería funcionen también en desarrollo.
+    "daphne",
     # Unfold debe ir ANTES de django.contrib.admin (admin moderno).
     "unfold",
     "unfold.contrib.filters",
@@ -62,6 +65,7 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    "channels",
     "rest_framework",
     "corsheaders",
     "django_filters",
@@ -73,6 +77,7 @@ LOCAL_APPS = [
     "apps.users",
     "apps.movies",
     "apps.games",
+    "apps.loteria",
     "apps.config_settings",
 ]
 
@@ -239,6 +244,7 @@ if not ON_VERCEL:
 
 # --- Bloques modulares ---
 from .env import *  # noqa: E402,F401,F403
+from .settings_channels import *  # noqa: E402,F401,F403
 from .settings_cors import *  # noqa: E402,F401,F403
 from .settings_rest_framework import *  # noqa: E402,F401,F403
 from .settings_storages import *  # noqa: E402,F401,F403

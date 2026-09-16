@@ -18,3 +18,6 @@ requests==2.34.2
 PyJWT==2.13.0
 # Sirve estáticos (admin/DRF) desde la función; sin paso de collectstatic.
 whitenoise==6.12.0
+# WebSockets en tiempo real (lotería). channels-redis solo se usa si hay REDIS_URL.
+channels[daphne]==4.2.2
+channels-redis==4.2.1
